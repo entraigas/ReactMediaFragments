@@ -1,3 +1,4 @@
+import { delay } from "lodash";
 import React, { Component } from "react";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -36,6 +37,9 @@ class index extends Component {
       src: this.props.video.src,
     };
     this.firstTime = this.firstTime.bind(this);
+    this.onStop = this.onStop.bind(this);
+    this.playNext = this.playNext.bind(this);
+    this.onPlay = this.onPlay.bind(this);
   }
 
   firstTime(params){
@@ -52,9 +56,52 @@ class index extends Component {
     this.videoRef = params.ref;
   }
 
+  isMediaFragment(){
+    const {selected} = this.state;
+    if(selected<=0){
+      return false;
+    }
+    const {items, duration} = this.props.video;
+    let item = items[selected];
+    if(item.start > 0 || item.end < duration){
+      return true;
+    }
+    return false;
+  }
   /*
    * Events
    */
+
+   onStop(event){
+     const waitTime = 1000;
+     const {selected} = this.state;
+     let {type, srcElement} = event;
+     const ts = Math.round(srcElement.currentTime);
+     const total = this.props.video.items.length;
+     // get selected item
+     const item = this.props.video.items[selected];
+     const end = parseInt(item.end, 10);
+     if(type==="ended"){
+       this.setState({playing:false});
+       if(selected<total-1){
+         delay(this.playNext, waitTime);
+       }
+     }
+     if(this.isMediaFragment() && type==="pause" && ts === end){
+       this.setState({playing:false});
+       if(selected<total-1){
+         delay(this.playNext, waitTime);
+       }
+     }
+  }
+
+  playNext(){
+    const {selected} = this.state;
+    const total = this.props.video.items.length;
+    if(selected+1 < total){
+      this.onPlay(selected+1);
+    }
+  }
 
   onPlay(index){
     let {playing, selected} = this.state;
@@ -78,7 +125,6 @@ class index extends Component {
       this.setState({playing, selected: index});
       return;
     }
-    console.log(index, playing, this.state)
     //play another clip
     if(playing){
       this.videoRef.pause();
@@ -111,7 +157,14 @@ class index extends Component {
         <CardHeader title={this.props.video.title} />
         <CardContent style={{ display: "flex", alignItems: "center"}}>
         <div style={{width:"350px"}}>
-          <MyVideo src={this.state.src} onload={this.firstTime} autoplay={this.state.playing} controls={false} />
+          <MyVideo
+            src={this.state.src}
+            onload={this.firstTime}
+            autoplay={this.state.playing}
+            controls={false}
+            onVideoEnd={this.onStop}
+            onVideoPause={this.onStop}
+          />
         </div>
         </CardContent>
       </Card>
@@ -151,7 +204,7 @@ class index extends Component {
       <div style={styles.container}>
         {this.renderVideo()}
         <Paper style={styles.section}>
-          <Button onClick={onAdd}>Add</Button>
+          <Button onClick={onAdd}>Add Clip</Button>
           <Grid items={items} display={display} />
         </Paper>
       </div>

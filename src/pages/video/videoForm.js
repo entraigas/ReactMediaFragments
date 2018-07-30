@@ -1,4 +1,3 @@
-import { size } from 'lodash';
 import React, { Component } from "react";
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
@@ -90,6 +89,9 @@ class form extends Component {
     end = parseInt(end, 10);
     if(end<=0 || end>duration){
       return `Invalid end time (must be between 1 - ${duration})`;
+    }
+    if(end<=start){
+      return `Invalid end time (must be between ${start} - ${duration})`;
     }
     return false;
   }

@@ -15,6 +15,26 @@ export default class MyVideo extends Component {
       	clearInterval(i);
       }
     }, 200);
+    /*
+    video.addEventListener("loadedmetadata", (event)=>{
+      console.log("loadedmetadata",event);
+    });
+    */
+    video.addEventListener("playing", (event)=>{
+      if(isFunction(self.props.onVideoPlay)){
+        self.props.onVideoPlay(event);
+      }
+    });
+    video.addEventListener("ended", (event)=>{
+      if(isFunction(self.props.onVideoEnd)){
+        self.props.onVideoEnd(event);
+      }
+    });
+    video.addEventListener("pause", (event)=>{
+      if(isFunction(self.props.onVideoPause)){
+        self.props.onVideoPause(event);
+      }
+    });
   }
 
   render(){
